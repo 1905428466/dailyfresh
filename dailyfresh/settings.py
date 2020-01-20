@@ -60,7 +60,7 @@ ROOT_URLCONF = 'dailyfresh.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, '../../templates')]
+        'DIRS': [os.path.join(BASE_DIR, 'templates')]
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'builtins':['django.templatetags.static'],
         },
     },
 ]
@@ -135,3 +136,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR,"static")
 ]
+
+
+#发送邮箱的配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25 #端口
+#发送邮件的邮箱
+EMAIL_HOST_USER = 'z1905428466@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = "zoujia99"
+#收件人看到的发件人
+EMAIL_FROM = '邹栋<z1905428466@163.com>'
