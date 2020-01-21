@@ -3,6 +3,8 @@ from django.shortcuts import render,redirect,reverse
 from django.http import HttpResponse
 from django.views import View
 from django.core.mail import send_mail
+from django.contrib.auth import login,authenticate
+from django.contrib.auth.hashers import check_password
 
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from dailyfresh.settings import SECRET_KEY,EMAIL_FROM
@@ -10,6 +12,8 @@ from user.models import User
 from . import constant
 from celery_tasks.tasks import send_register_active_email
 # Create your views here.
+
+
 class RegisterView(View):
     def get(self,request):
         """显示注册页面"""
@@ -28,7 +32,7 @@ class RegisterView(View):
         if not all([user_name, pwd, cpwd, email]):   #参数是否为空
             return render(request,"register.html",context={"errmsg":"请把信息填写完整哦"})
 
-        if not ((len(user_name) >= 5) and (len(user_name) <= 20)):
+        if not ((len(user_name) >= 5) and (len(user_name) <= 20)):  #用户名
             return render(request, "register.html", context={"errmsg": "用户名最少5位，最大20位"})
 
         if not ((len(pwd) >= 8) and (len(pwd) <= 20)): #密码长度
@@ -96,3 +100,38 @@ class LoginView(View):
     def get(self,request):
         """显示登录页面"""
         return render(request,"login.html")
+
+    def post(self,request):
+        """处理登录逻辑"""
+        #1、获取参数
+        username = request.POST.get("username") #用户名
+        pwd = request.POST.get("pwd")   #密码
+        chec = request.POST.get("chec")   #记住我
+        #2、校验参数
+        if not all([username,pwd]):
+            return render(request,"login.html",context={"errmsg":"数据不完整"})
+
+        if not ((len(username) >= 5) and (len(username) <= 20)):  #用户名
+            return render(request, "login.html", context={"errmsg": "用户名最少5位，最大20位"})
+
+        if not ((len(pwd) >= 8) and (len(pwd) <= 20)): #密码长度
+            return render(request,"login.html",context={"errmsg":"密码最少8位，最大20位"})
+
+        # 3、业务逻辑
+        user = User.objects.filter(username=username).first()
+        if check_password(pwd,user.password):   #判断用户是否存在
+            if user.is_active:  #判断用户是否是激活状态
+                login(request,user)
+                if chec == "on":
+                    request.session["username"] = user.id
+                    request.session.set_expiry(constant.SESSION_EXPIRATION_DATE)  #设置用户过期时间
+                else:
+                    request.session.set_expiry(0)
+                # 4、返回结果
+                return redirect(reverse("goods:index"))
+            else:
+                return render(request,"login.html",context={"errmsg":"账号未激活"})
+        else:
+            return render(request,"login.html",context={"errmsg":"用户名或密码错误"})
+
+

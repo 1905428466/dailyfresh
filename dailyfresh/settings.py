@@ -96,6 +96,23 @@ DATABASES = {
 AUTH_USER_MODEL = "user.User"
 
 
+#设置redis缓存
+CACHES = {
+    'default':{
+        'BACKEND':'django_redis.cache.RedisCache',
+        'LOCATION':'redis://127.0.0.1:6379/2',
+        "OPTIONS":{
+            "CLIENT_CLASS":"django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# 设置缓存存储session，此时mysql中的django_session将不再存储session
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# 与CACHES中的default对应
+SESSION_CACHE_ALIAS = "default"
+
+
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
